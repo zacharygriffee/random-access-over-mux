@@ -1,0 +1,26 @@
+{
+  "name": "random-access-over-mux",
+  "type": "module",
+  "license": "MIT",
+  "main": "index.js",
+  "browser": "index.js",
+  "description": "random-access over protomux channel",
+  "version": "0.0.1",
+  "homepage": "",
+  "scripts": {
+    "test": "node ./test.js"
+  },
+  "dependencies": {
+    "b4a": "^1.6.4",
+    "compact-encoding": "^2.13.0",
+    "framed-stream": "^1.0.1",
+    "protomux-rpc": "^1.5.1"
+  },
+  "devDependencies": {
+    "brittle": "^3.3.2",
+    "duplex-through": "^1.0.2",
+    "random-access-memory": "^6.2.0",
+    "random-access-storage": "^3.0.1",
+    "streamx": "^2.15.6"
+  }
+}
