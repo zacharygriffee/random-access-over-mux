@@ -60,7 +60,7 @@ await new Promise(resolve => stream.once("connect", resolve));
 
 // ras Operates just like a random-access-storage instance, but remote.
 const ras = await connect(stream, {
-    protocol: "rac/fileservice/blah",
+    protocol: "rac/bartender/reference",
     id: b4a.from("martiniTips.txt")
 });
 
