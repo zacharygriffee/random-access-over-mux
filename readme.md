@@ -1,4 +1,4 @@
-# random-access-over-stream
+# random-access-over-mux
 
 ---
 ---
