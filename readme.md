@@ -1,12 +1,11 @@
-#random-access-over-stream
+# random-access-over-stream
 
 ---
 ---
 
 ### `!! Alpha  Stage !!`
 
-Transmit any [random-access-storage (ras)](https://www.npmjs.com/package/random-access-storage#random-access-storage) derived 
-class instance over a stream or [protomux](https://github.com/holepunchto/protomux/#protomux) connection. 
+Transmit any [random-access-storage (ras)](https://www.npmjs.com/package/random-access-storage#random-access-storage) derived instance over a stream or [protomux](https://github.com/holepunchto/protomux/#protomux) connection. 
 
 Roadmap and Current state:
 
