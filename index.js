@@ -1,10 +1,11 @@
 import cenc from "compact-encoding";
 import ProtomuxRPC from "protomux-rpc";
 import FramedStream from "framed-stream";
+import b4a from "b4a";
 
 import {
     capabilityEncoding,
-    offsetBinaryEncoding,
+    offsetBufferEncoding,
     offsetSizeEncoding,
     statEncoding
 } from "./lib/messages.js";
@@ -64,7 +65,7 @@ class RandomAccessOverMux {
     }
 
     open(cb = () => Promise.resolve()) {
-        return this.opened.then(cb);
+        return this.opened.then(() => cb()).catch(e => cb(e));
     }
 
     read(offset, size, callback) {
@@ -86,8 +87,8 @@ class RandomAccessOverMux {
                             offset: offset, size: size
                         }, {
                             requestEncoding: offsetSizeEncoding,
-                            responseEncoding: cenc.binary
-                        }).then(callback.bind(this, null)).catch(callback);
+                            responseEncoding: cenc.buffer
+                        }).then((buff) => callback(null, buff || b4a.alloc(0))).catch(callback.bind(this));
                     }
                 } else {
                     callback(new Error("Not readable"));
@@ -115,7 +116,7 @@ class RandomAccessOverMux {
                         this.rpc.request("write", {
                             offset, buffer
                         }, {
-                            requestEncoding: offsetBinaryEncoding,
+                            requestEncoding: offsetBufferEncoding,
                             responseEncoding: cenc.none
                         }).then(callback.bind(this, null)).catch(callback);
                     }
@@ -211,6 +212,28 @@ class RandomAccessOverMux {
         return p;
     }
 
+    unlink(callback) {
+        const start = this.isServer ? Promise.resolve() : this.open();
+        let p = undefined;
+        if (!callback) {
+            p = new Promise(
+                (resolve, reject) => callback = (e, v) => e ? reject(e) : resolve(v)
+            )
+        }
+        start.then(
+            () => {
+                if (this.isServer) {
+                    this.ras.unlink(callback.bind(this));
+                } else {
+                    if (!this.rpc.closed)
+                        this.rpc.event("unlink");
+                    callback();
+                }
+            }
+        );
+        return p;
+    }
+
     close(callback) {
         const self = this;
 
@@ -247,7 +270,7 @@ function setupServer() {
     if (this.capability.readable) {
         this.rpc.respond("read", {
                 requestEncoding: offsetSizeEncoding, // offset and size
-                responseEncoding: cenc.binary
+                responseEncoding: cenc.buffer
             },
             ({
                  offset,
@@ -258,7 +281,7 @@ function setupServer() {
 
     if (this.capability.writable) {
         this.rpc.respond("write", {
-                requestEncoding: offsetBinaryEncoding, // offset and write buffer
+                requestEncoding: offsetBufferEncoding, // offset and write buffer
                 responseEncoding: cenc.none
             },
             ({
@@ -293,6 +316,12 @@ function setupServer() {
             },
             () => new Promise((resolve, reject) => this.stat(handleCallback(resolve, reject))));
     }
+
+    this.rpc.respond("unlink", {
+            requestEncoding: cenc.none,
+            responseEncoding: cenc.none
+        },
+        () => new Promise((resolve, reject) => this.unlink(handleCallback(resolve, reject))));
 
     this.rpc.respond("close", {
             requestEncoding: cenc.none,
@@ -355,9 +384,6 @@ function setupChannel(config = {}) {
     });
 
     return this;
-
-    // if (isServer) return Promise.resolve(this);
-    // return this.open().then(() => this);
 }
 
 export const serve = RandomAccessOverMux.serve;

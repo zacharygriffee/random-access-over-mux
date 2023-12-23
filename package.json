@@ -5,7 +5,7 @@
   "main": "index.js",
   "browser": "index.js",
   "description": "random-access over protomux channel",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "homepage": "https://github.com/zacharygriffee/random-access-over-mux#random-access-over-mux",
   "scripts": {
     "test": "node ./test.js"
@@ -19,6 +19,7 @@
   "devDependencies": {
     "brittle": "^3.3.2",
     "duplex-through": "^1.0.2",
+    "hypercore": "^10.31.12",
     "protomux": "^3.5.1",
     "random-access-memory": "^6.2.0",
     "random-access-storage": "^3.0.1",

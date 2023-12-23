@@ -1,4 +1,4 @@
-import {test, solo} from "brittle";
+import {test, solo, skip} from "brittle";
 import b4a from "b4a";
 import duplexThrough from "duplex-through";
 import {connect, serve} from "./index.js";
@@ -6,6 +6,7 @@ import RAM from "random-access-memory";
 import {Duplex} from "streamx";
 import net from "node:net";
 import Protomux from "protomux";
+import Hypercore from "hypercore";
 
 test("Basic serve and connect", t => {
     t.plan(7);
@@ -139,4 +140,31 @@ test("Over protomux", async t => {
     const result = await ras.read(16, 10);
 
     t.is(b4a.toString(result), "ingredient", "Pass");
+});
+
+test("Create a hypercore from a random-access-over-mux", async (t) => {
+    const [d1, d2] = duplexThrough();
+
+    const serveMux = new Protomux(d1);
+    const clientMux = new Protomux(d2);
+
+    const clientFiles = coreFiles(serveMux, clientMux);
+
+    const string = "Add an orange and lime to the rim. An orange is meant to make the margarita sweeter, while the lime more sour. It gives the patron ability to tweak the flavor to their liking.";
+    const core = new Hypercore((name) => clientFiles[name]);
+    await core.append(string);
+    const result = b4a.toString(await core.get(0));
+    t.is(result, string);
+    await core.purge();
+
+    function coreFiles(serveMux, clientMux) {
+        return ["oplog", "data", "bitfield", "tree", "header"].reduce(
+            (acc, fileName) => {
+                const fileId = { id: b4a.from(fileName) };
+                serve(serveMux, () => new RAM(), fileId)
+                acc[fileName] = connect(clientMux, fileId);
+                return acc;
+            }, {}
+        );
+    }
 });
