@@ -19,7 +19,7 @@ Roadmap and Current state:
 ### Why not [hypercore](https://github.com/holepunchto/hypercore)?
 
 I needed connection between two very trusted endpoints (web workers for example) in a web browser and the underlying
-secret stream [hypercore](https://github.com/holepunchto/hypercore) depends on doesn't work in web browser without relay. 
+secret stream [hypercore](https://github.com/holepunchto/hypercore) depends on doesn't work in web browser without relay.
 
 ---
 ---
@@ -142,6 +142,35 @@ Get all the capabilities of the ras, on either side.
 ### `bool = ras.isServer`
 
 Whether the ras is the server or not.
+
+## Using this repo to test inversion of control (IoC) techniques.
+
+I am also using this library to test out some inversion of control techniques to reduce duplication of code. Many of my libraries
+I am using the same libraries over and over again bloating my pages. And bundlers have a problem dealing with this.
+
+I have attached a simple method of IoC for this library for now, but I have plans for a more complex way of handling dependencies.
+I plan on supporting both the IoC and traditional methods of load on my libraries.
+
+### Example IoC
+```ecmascript 6
+    import inject from "random-access-over-mux/ioc";
+    // Lets say you have these libraries already loaded elsewhere
+    import b4a from "b4a";
+    import cenc from "compact-encoding";
+    
+    const {serve, connect} = await inject({
+        ["compact-encoding"]: cenc,
+        b4a: b4a
+    });
+    
+    // then proceed to use serve and connect 
+    // just like the exammple at the top of this readme
+    serve(mux1, () => new RAM);
+    const ras = connect(mux2)
+    await ras.write(0, b4a.from("use real cherries not maraschino cherries in your old fashion"));
+    ras.close();
+    
+```
 
 
 ## Test it

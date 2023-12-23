@@ -1,12 +1,16 @@
 import {test, solo, skip} from "brittle";
 import b4a from "b4a";
+import cenc from "compact-encoding";
 import duplexThrough from "duplex-through";
-import {connect, serve} from "./index.js";
 import RAM from "random-access-memory";
 import {Duplex} from "streamx";
 import net from "node:net";
 import Protomux from "protomux";
+import ProtomuxRPC from "protomux-rpc";
 import Hypercore from "hypercore";
+import {connect, serve} from "./index.js";
+import inject from "./index.ioc.js";
+import FramedStream from "framed-stream";
 
 test("Basic serve and connect", t => {
     t.plan(7);
@@ -168,3 +172,23 @@ test("Create a hypercore from a random-access-over-mux", async (t) => {
         );
     }
 });
+
+test("Inversion of control test", async t => {
+    const {serve, connect} = await inject({
+        "compact-encoding": cenc,
+        "framed-stream": FramedStream,
+        "protomux-rpc": ProtomuxRPC,
+        b4a
+    });
+
+    const [d1, d2] = duplexThrough();
+
+    serve(d1, () => new RAM());
+    const ras = connect(d2);
+    await ras.write(0, b4a.from("shake egg whites with sour drinks like midori sour or whiskey sour with a splash of soda after for a frothy lift"));
+    const result = b4a.toString(await ras.read(0, 5));
+    t.is(result, "shake", "Dependency injection load works.");
+    ras.close();
+    await ras.closed;
+    t.pass();
+})
