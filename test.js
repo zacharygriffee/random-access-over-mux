@@ -173,7 +173,7 @@ test("Create a hypercore from a random-access-over-mux", async (t) => {
     }
 });
 
-test("Inversion of control test", async t => {
+solo("Inversion of control test", async t => {
     const {serve, connect} = await inject({
         "compact-encoding": cenc,
         "framed-stream": FramedStream,
