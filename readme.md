@@ -12,7 +12,7 @@ Roadmap and Current state:
 - No reconnect logic yet. Once either the file or rpc is closed, have to recreate both the serve and client side.
 - No firewall or middlewares yet.
 - Be able to set readonly or writeonly or even stat-only
-- Suspend and unlink not yet supported
+- Suspend not yet supported
 
 > Although planned, there is no security protocols currently. Only use this between secure mediums and only over secure transports.
 
