@@ -41,13 +41,13 @@ import RAM from "random-access-memory";
 
 const server = net.createServer(async socket => {
     // Serve the file. 
-    await serve(socket,() => new RAM(), {
+    serve(socket,() => new RAM(), {
         protocol: "rac/bartender/reference",
         id: b4a.from("martiniTips.txt")
     });
     
     // serve another file. You can also access the file from server side too.
-    const ras = await serve(socket,() => new RAM(), {
+    const ras = serve(socket,() => new RAM(), {
         protocol: "rac/bartender/reference",
         id: b4a.from("muddling.txt")
     });
@@ -59,7 +59,7 @@ const stream = net.connect({port: 41111});
 await new Promise(resolve => stream.once("connect", resolve));
 
 // ras Operates just like a random-access-storage instance, but remote.
-const ras = await connect(stream, {
+const ras = connect(stream, {
     protocol: "rac/bartender/reference",
     id: b4a.from("martiniTips.txt")
 });
@@ -89,8 +89,8 @@ To understand what random-access-over-mux is about, you should [read about the r
 
 ### Both sides have nearly same api
 
-### `ras = await serve(stream, randomAccessFactory, [config])`
-### `ras = await connect(stream, [config])`
+### `ras = serve(stream, randomAccessFactory, [config])`
+### `ras = connect(stream, [config])`
 
 `stream` Can be really any stream, socket, another random-access-over-mux instance or a [protomux](https://github.com/holepunchto/protomux/#protomux). Since my use-case this api will encounter unframed streams more 
 than framed, I decided to auto-frame the stream with [framed-stream](https://github.com/holepunchto/framed-stream#framed-stream). Set `config.noFrame=true` if you pass in a framed stream.

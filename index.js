@@ -354,8 +354,10 @@ function setupChannel(config = {}) {
         this.rpc.once("close", resolve);
     });
 
-    if (isServer) return Promise.resolve(this);
-    return this.open().then(() => this);
+    return this;
+
+    // if (isServer) return Promise.resolve(this);
+    // return this.open().then(() => this);
 }
 
 export const serve = RandomAccessOverMux.serve;

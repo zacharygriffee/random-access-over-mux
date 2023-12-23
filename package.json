@@ -5,7 +5,7 @@
   "main": "index.js",
   "browser": "index.js",
   "description": "random-access over protomux channel",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "homepage": "https://github.com/zacharygriffee/random-access-over-mux#random-access-over-mux",
   "scripts": {
     "test": "node ./test.js"
