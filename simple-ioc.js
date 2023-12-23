@@ -1,8 +1,8 @@
 let dependencies = {};
 let loadedDependencies = {};
 
-export function setDependencies(deps) {
-    dependencies = deps;
+export function addDependencies(deps = {}) {
+    dependencies = {...deps, ...dependencies};
 }
 
 export async function inject(deps = {}, customResolver, useCdn = typeof window !== "undefined") {
