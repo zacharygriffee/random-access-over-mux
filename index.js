@@ -313,7 +313,7 @@ function setupChannel(config = {}) {
 
     const {
         isServer,
-        stream
+        _stream
     } = this;
 
     if (isServer) {
@@ -332,7 +332,7 @@ function setupChannel(config = {}) {
     }
     // todo
     this._timeout = timeout;
-    this.rpc = new ProtomuxRPC(stream, {
+    this.rpc = new ProtomuxRPC(_stream, {
         protocol,
         id,
         // temporary handling of encoding due to protomux-rpc bug

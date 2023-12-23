@@ -5,9 +5,10 @@ import {connect, serve} from "./index.js";
 import RAM from "random-access-memory";
 import {Duplex} from "streamx";
 import net from "node:net";
+import Protomux from "protomux";
 
 test("Basic serve and connect", t => {
-    t.plan(7);
+    t.plan(8);
     const [d1,d2] = duplexThrough();
 
     serve(
@@ -21,7 +22,7 @@ test("Basic serve and connect", t => {
         d2
     ).then(
         (ras) => {
-            ras.write(0, b4a.from("hello world"), (e) => {
+            ras.write(0, b4a.from("hello world"), async (e) => {
                 ras.truncate(5, (e) => {
                     ras.read(0, 5, (e, buf) => {
                         t.is(b4a.toString(buf), "hello");
@@ -32,8 +33,17 @@ test("Basic serve and connect", t => {
                     t.is(size, 5);
                 });
 
+                try {
+                    // Trying to read past eof async edition.
+                    await ras.read(0,6)
+                    t.fail("Didn't catch.");
+                } catch (e) {
+                    t.is(e.message, "REQUEST_ERROR: Could not satisfy length", "async read error handled by try...catch");
+                }
+
+                // Trying to read past eof callback edition.
                 ras.read(0, 6, (e) => {
-                    t.ok(e, "Errors are handleable and come through the callback");
+                    t.is(e.message, "REQUEST_ERROR: Could not satisfy length", "Errors are handleable and come through the callback");
                     ras.read(0, 3, (e, buff) => {
                         t.is(b4a.toString(buff), "hel", "We can recover from the error.");
                         ras.close(e => {
@@ -120,4 +130,19 @@ test("Test over net.", async t => {
     t.teardown(
         () => server.close()
     );
+});
+
+test("Over protomux", async t => {
+    const [d1,d2] = duplexThrough();
+
+    const mux1 = new Protomux(d1);
+    const mux2 = new Protomux(d2);
+
+    serve(mux1, () => new RAM());
+    const ras = await connect(mux2);
+
+    await ras.write(0, b4a.from("Ice is the main ingredient in most cocktails."));
+    const result = await ras.read(16, 10);
+
+    t.is(b4a.toString(result), "ingredient", "Pass");
 });
