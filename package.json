@@ -5,7 +5,7 @@
   "main": "index.js",
   "browser": "index.js",
   "description": "random-access over protomux channel",
-  "version": "0.0.71",
+  "version": "0.0.72",
   "homepage": "https://github.com/zacharygriffee/random-access-over-mux#random-access-over-mux",
   "scripts": {
     "test": "node ./test.js"
@@ -14,7 +14,8 @@
     "b4a": "^1.6.4",
     "compact-encoding": "^2.13.0",
     "framed-stream": "^1.0.1",
-    "protomux-rpc": "^1.5.1"
+    "protomux-rpc": "^1.5.1",
+    "streamx-webstream": "^1.0.0"
   },
   "devDependencies": {
     "brittle": "^3.3.2",

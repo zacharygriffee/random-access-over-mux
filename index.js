@@ -1,4 +1,8 @@
-import {connect, serve, injectDependencies} from "./lib/randomAccessOverMux.js";
+import {
+    connect,
+    serve,
+    injectDependencies
+} from "./lib/randomAccessOverMux.js";
 
 await injectDependencies();
 

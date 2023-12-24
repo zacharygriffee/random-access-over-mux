@@ -173,7 +173,7 @@ test("Create a hypercore from a random-access-over-mux", async (t) => {
     }
 });
 
-solo("Inversion of control test", async t => {
+test("Inversion of control: use", async t => {
     const {serve, connect} = await inject({
         "compact-encoding": cenc,
         "framed-stream": FramedStream,
@@ -191,4 +191,4 @@ solo("Inversion of control test", async t => {
     ras.close();
     await ras.closed;
     t.pass();
-})
+});
