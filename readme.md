@@ -53,6 +53,8 @@ const server = net.createServer(async socket => {
     });
 
     await ras.write(0, b4a.from("Roll the muddler over the mash with the fat part of your hand, don't just smash like a mad-person"));
+
+    ras.read(0, 4, (error, buffer) => b4a.toString(buffer)); // Roll
 }).listen(41111);
 
 const stream = net.connect({port: 41111});
@@ -70,9 +72,6 @@ const result = await ras.read(5, 11); // don't shake
 
 stream.destroySoon();
 
-// You could access the random-access instance through the server as well.
-// This is also example of a callback instead of promise, you could use promise here too.
-server.read(0, 4, (error, buffer) => b4a.toString(buffer)); // stir
 ```
 
 # API
