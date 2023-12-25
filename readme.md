@@ -86,6 +86,7 @@ To understand what random-access-over-mux is about, you should [read about the r
 - `await ras.del(offset, size)` | `ras.del(offset, size, (error) => {})`
 - `await ras.truncate(offset)` | `ras.truncate(offset, (error) => {})`
 - `stat = await ras.stat()` | `ras.stat(offset, (error, stat) => {})`
+- **new** 
 
 ### Both sides have nearly same api
 
@@ -171,8 +172,6 @@ I plan on supporting both the IoC and traditional methods of load on my librarie
     ras.close();
     
 ```
-
-
 ## Test it
 
 ```sh
