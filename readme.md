@@ -81,12 +81,13 @@ To understand what random-access-over-mux is about, you should [read about the r
 . This library simply wraps the api to be served over any stream.
 
 ### Currently supported random-access api
+- **new** `Promise<RandomAccessOverMux> = await ras.open()` |  `ras.open((error) => {})`
 - `data = await ras.read(offset, size)` | `ras.read(offset, size, (error, data) => {})`
 - `await ras.write(offset, buff)` | `ras.write(offset, buff, (error) => {})`
 - `await ras.del(offset, size)` | `ras.del(offset, size, (error) => {})`
 - `await ras.truncate(offset)` | `ras.truncate(offset, (error) => {})`
 - `stat = await ras.stat()` | `ras.stat(offset, (error, stat) => {})`
-- **new** 
+- `close = await ras.close()` | `ras.close((error) => {})`
 
 ### Both sides have nearly same api
 
