@@ -198,8 +198,7 @@ skip("Create a hypercore from a random-access-over-mux with ram", async (t) => {
     }
 });
 
-// FAILING TEST FOR FS
-skip("Create a hypercore from a random-access-over-mux with filesystem", async (t) => {
+test("Create a hypercore from a random-access-over-mux with filesystem", async (t) => {
     const [d1, d2] = duplexThrough();
 
     const serveMux = new Protomux(d1);
