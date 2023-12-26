@@ -30,7 +30,7 @@ secret stream [hypercore](https://github.com/holepunchto/hypercore) depends on d
 npm install random-access-over-mux --save
 ```
 
-## Example
+## Single File Example
 
 ```ecmascript 6
 import net from "node:net";
@@ -74,19 +74,12 @@ stream.destroySoon();
 
 ```
 
-# API
+# File API
+
+`import {serve, connect} from  "random-access-over-mux";`
 
 To understand what random-access-over-mux is about, you should [read about the random-access api](https://www.npmjs.com/package/random-access-storage#random-access-storage)
 . This library simply wraps the api to be served over any stream.
-
-### Currently supported random-access api
-- **new** `RandomAccessOverMux instance = await ras.open()` |  `ras.open((error) => {})`
-- `data = await ras.read(offset, size)` | `ras.read(offset, size, (error, data) => {})`
-- `await ras.write(offset, buff)` | `ras.write(offset, buff, (error) => {})`
-- `await ras.del(offset, size)` | `ras.del(offset, size, (error) => {})`
-- `await ras.truncate(offset)` | `ras.truncate(offset, (error) => {})`
-- `stat = await ras.stat()` | `ras.stat(offset, (error, stat) => {})`
-- `close = await ras.close()` | `ras.close((error) => {})`
 
 ### Both sides have nearly same api
 
@@ -96,8 +89,8 @@ To understand what random-access-over-mux is about, you should [read about the r
 `stream` Can be really any stream, socket, another random-access-over-mux instance or a [protomux](https://github.com/holepunchto/protomux/#protomux). Since my use-case this api will encounter unframed streams more 
 than framed, I decided to auto-frame the stream with [framed-stream](https://github.com/holepunchto/framed-stream#framed-stream). Set `config.noFrame=true` if you pass in a framed stream.
 
-`randomAccessFactory` A function that returns a [random-access](https://www.npmjs.com/package/random-access-storage#random-access-storage) instance. Serve side only argument.
-
+`randomAccessFactory=(mux, config) => {}` A function that returns a [random-access](https://www.npmjs.com/package/random-access-storage#random-access-storage) instance. Serve side only argument.
+ 
 `config` 
 
 - `protocol=randomAccessChannel` Optional protocol name. 
@@ -116,6 +109,18 @@ The channel and random-access-storage is closed.
 
 > Currently, you need to recreate the serve/connect pair to reopen. 
 > This will probably change.
+
+### Methods
+- **new** `RandomAccessOverMux instance = await ras.open()` |  `ras.open((error) => {})`
+- `data = await ras.read(offset, size)` | `ras.read(offset, size, (error, data) => {})`
+- `await ras.write(offset, buff)` | `ras.write(offset, buff, (error) => {})`
+- `await ras.del(offset, size)` | `ras.del(offset, size, (error) => {})`
+- `await ras.truncate(offset)` | `ras.truncate(offset, (error) => {})`
+- `stat = await ras.stat()` | `ras.stat(offset, (error, stat) => {})`
+- `close = await ras.close()` | `ras.close((error) => {})`
+- `await ras.unlink()` | `ras.unlink((error) => {})`
+
+### Properties
 
 ### `protomux = ras.mux`
 
@@ -144,6 +149,77 @@ Get all the capabilities of the ras, on either side.
 
 Whether the ras is the server or not.
 
+### `string=ras.protocol` 
+The protocol that the protomux-rpc is using
+### `buffer=ras.id` 
+The id the protomux-rpc is using. If created by loader, this is also the hash of the file.
+
+# Loader API
+
+`import {serve, connect} from  "random-access-over-mux/loader";`
+
+### Both sides have nearly same api
+
+### `loader = serve(stream, fileFactory, [config])`
+### `loader = connect(stream, [config])`
+
+`fileFactory=(fileName, mux, config) => {}` is different from the randomAccessFactory argument from file api. This will receive a 'fileName' as the first argument for you
+to create a file from.
+
+#### In addition to config in the 'file api' section the following configuration is available
+
+`config.fileHasher=(fileName) => b4a.from(fileName)` When a file is requested, this function will turn the fileName into a hash for the id of the channel. By default,
+the hasher just converts the fileName into it's buffer representation.
+
+`config.protocolHandler=(fileName) => 'randomAccessChannel'` When a file is requested, this function will turn the fileName into a protocol for the protomux channel
+handling the underlying rpc. By default, it uses 'randomAccessChannel' as the protocol name.
+
+### Methods
+
+`raom = await loader.load(fileName) | loader.load(fileName, (err, raom) => {})`
+
+This will load the file on the server side, and will return the random-access-over-mux instance where the file API above takes over.
+
+`returns` a random-access-over-mux instance see file api
+
+`await loader.unload(fileName) | loader.unload(fileName, (err) => {})`
+
+- Called by the serve loader, will unload the file for both server and client.
+- Called by the connect loader, will unload the file for client only. The loader.serve will still be able to operate on it, and other loader.connect can connect.
+
+
+## Loader Example
+
+```ecmascript 6
+import {connect, serve} from "random-access-over-mux/loader";
+import RAM from "random-access-memory";
+// Create a 'ram folder' that acts like a folder of files.
+// You could use random-access-file or @zacharygriffee/random-access-idb
+// Or any other random access library you find.
+const folder = RAM.reusable();
+
+const serveLoader = serve(d1, (fileName) => folder(fileName));
+const clientLoader = connect(d2);
+
+// Load a file on either side
+// Returns a random-access-over-mux instance (see single file example above)
+const ras = await clientLoader.load("wineTastingTips.txt"); 
+await ras.write(0, b4a.from("Don't like wine? You're probably drinking it wrong. Aerate your wine, sip it like a hot coffee, roll it around in the glass to vastly improve your wine drinking experience."));
+const serveRas = await serveLoader.load("wineTastingTips.txt");
+await serveRas.read(52, 6); // Aerate
+
+// if you unload on server side.
+await serveLoader.unload("wineTastingTips.txt");
+// No longer available on client and server side
+
+// if you unload on client side
+await clientLoader.unload("wineTastingTips.txt");
+
+// No longer available on client side but the server and other clients can still access.
+```
+
+
+
 ## Using this repo to test inversion of control (IoC) techniques.
 
 I am also using this library to test out some inversion of control techniques to reduce duplication of code. Many of my libraries
@@ -155,6 +231,7 @@ I plan on supporting both the IoC and traditional methods of load on my librarie
 ### Example IoC
 ```ecmascript 6
     import inject from "random-access-over-mux/ioc";
+//  import inject from "random-access-over-mux/loader/ioc";
     // Lets say you have these libraries already loaded elsewhere
     import b4a from "b4a";
     import cenc from "compact-encoding";

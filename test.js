@@ -9,11 +9,11 @@ import net from "node:net";
 import Protomux from "protomux";
 import ProtomuxRPC from "protomux-rpc";
 import Hypercore from "hypercore";
-import {connect, serve} from "./index.js";
 import inject from "./index.ioc.js";
 import FramedStream from "framed-stream";
 import path, {dirname} from 'path';
 import {fileURLToPath} from 'url';
+import {connect, serve} from "./index.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -152,6 +152,26 @@ test("Over protomux", async t => {
     t.is(b4a.toString(result), "ingredient", "Pass");
 });
 
+test("Two files over protomux", async t => {
+    t.plan(2);
+    const [d1, d2] = duplexThrough();
+
+    const mux1 = new Protomux(d1);
+    const mux2 = new Protomux(d2);
+
+    serve(mux1, () => new RAM(), {protocol: "ice1"});
+    const ras1 = connect(mux2, {protocol: "ice1"});
+    await ras1.write(0, b4a.from("Ice is the main ingredient in most cocktails."));
+    const result1 = await ras1.read(16, 10);
+    t.is(b4a.toString(result1), "ingredient", "Pass")
+
+    serve(mux1, () => new RAM(), {protocol: "ice2"});
+    const ras2 = connect(mux2, {protocol: "ice2"});
+    await ras2.write(0, b4a.from("Neat drinks don't have ice."));
+    const result2 = await ras2.read(0, 4);
+    t.is(b4a.toString(result2), "Neat", "Pass");
+});
+
 test("Inversion of control: use", async t => {
     const {serve, connect} = await inject({
         "compact-encoding": cenc,
@@ -172,7 +192,7 @@ test("Inversion of control: use", async t => {
     t.pass();
 });
 
-skip("Create a hypercore from a random-access-over-mux with ram", async (t) => {
+test("Create a hypercore from a random-access-over-mux with ram", async (t) => {
     const [d1, d2] = duplexThrough();
 
     const serveMux = new Protomux(d1);
@@ -223,3 +243,6 @@ test("Create a hypercore from a random-access-over-mux with filesystem", async (
         );
     }
 });
+
+
+await import("./testLoader.js");

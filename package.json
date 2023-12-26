@@ -5,7 +5,7 @@
   "main": "index.js",
   "browser": "index.js",
   "description": "random-access over protomux channel",
-  "version": "0.0.83",
+  "version": "0.0.9",
   "homepage": "https://github.com/zacharygriffee/random-access-over-mux#random-access-over-mux",
   "scripts": {
     "test": "node ./test.js"
@@ -32,6 +32,12 @@
     },
     "./ioc": {
       "default": "./index.ioc.js"
+    },
+    "./loader": {
+      "default": "./loader.js"
+    },
+    "./loader/ioc": {
+      "default": "./loader.ioc.js"
     }
   }
 }
