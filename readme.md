@@ -21,6 +21,8 @@ Roadmap and Current state:
 I needed connection between two very trusted endpoints (web workers for example) in a web browser and the underlying
 secret stream [hypercore](https://github.com/holepunchto/hypercore) depends on doesn't work in web browser without relay.
 
+You could still use hypercore with this library on the browser as long as you replicate through a relay.
+
 ---
 ---
 
@@ -29,6 +31,86 @@ secret stream [hypercore](https://github.com/holepunchto/hypercore) depends on d
 ```sh
 npm install random-access-over-mux --save
 ```
+
+# File API
+
+`import {serve, connect} from  "random-access-over-mux";`
+
+To understand what random-access-over-mux is about, you should [read about the random-access api](https://www.npmjs.com/package/random-access-storage#random-access-storage)
+. This library simply wraps the api to be served over any stream.
+
+### Both sides have nearly same api
+
+### `ras = serve(stream, randomAccessFactory, [config])`
+### `ras = connect(stream, [config])`
+
+`stream` Can be really any stream, socket, another random-access-over-mux instance or a [protomux](https://github.com/holepunchto/protomux/#protomux). Since my use-case this api will encounter unframed streams more 
+than framed, I decided to auto-frame the stream with [framed-stream](https://github.com/holepunchto/framed-stream#framed-stream). Set `config.noFrame=true` if you pass in a framed stream.
+
+`randomAccessFactory=(mux, config) => {}` A function that returns a [random-access](https://www.npmjs.com/package/random-access-storage#random-access-storage) instance. Serve side only argument.
+ 
+`config` 
+
+- `protocol=randomAccessChannel` Optional protocol name. 
+- `id`  Optional binary ID to identify this file / RPC channel
+- `noFrame=false` If non-protomux stream is passed, will auto frame the stream unless this is set to true.
+- `bits=32` When noFrame=false, this will be the size each frame will be in bits. See [framed-stream](https://github.com/holepunchto/framed-stream#framed-stream)
+- coming soon: `timeout=8000` When the other side doesn't respond, close the connection at this timeout.
+
+### `await ras.opened`
+
+The channel and random-access-storage is opened.
+
+### `await ras.closed`
+
+The channel and random-access-storage is closed. 
+
+> Currently, you need to recreate the serve/connect pair to reopen. 
+> This will probably change.
+
+### Methods
+- `RandomAccessOverMux = await ras.open()` |  `ras.open((error) => {})`
+- `data = await ras.read(offset, size)` | `ras.read(offset, size, (error, data) => {})`
+- `await ras.write(offset, buff)` | `ras.write(offset, buff, (error) => {})`
+- `await ras.del(offset, size)` | `ras.del(offset, size, (error) => {})`
+- `await ras.truncate(offset)` | `ras.truncate(offset, (error) => {})`
+- `stat = await ras.stat()` | `ras.stat(offset, (error, stat) => {})`
+- `close = await ras.close()` | `ras.close((error) => {})`
+- `await ras.unlink()` | `ras.unlink((error) => {})`
+
+### Properties
+
+### `protomux = ras.mux`
+
+Get the underlying muxor handling the random-access rpc connection where you can pass it to other libraries that use mux.
+
+### `protomux-rpc = ras.rpc`
+
+You may [add your own rpc](https://github.com/holepunchto/protomux-rpc#protomux-rpc) methods and make your own requests as long as they don't conflict with
+already defined ones (e.g. write, read, stat, truncate, del, close).
+
+### `{} = ras.capability`
+
+Get all the capabilities of the ras, on either side.
+
+```text
+{
+    readable
+    writable
+    deletable
+    truncatable
+    statable
+}
+```
+
+### `bool = ras.isServer`
+
+Whether the ras is the server or not.
+
+### `string=ras.protocol` 
+The protocol that the protomux-rpc is using
+### `buffer=ras.id` 
+The id the protomux-rpc is using. If created by loader, this is also the hash of the file.
 
 ## Single File Example
 
@@ -73,86 +155,6 @@ const result = await ras.read(5, 11); // don't shake
 stream.destroySoon();
 
 ```
-
-# File API
-
-`import {serve, connect} from  "random-access-over-mux";`
-
-To understand what random-access-over-mux is about, you should [read about the random-access api](https://www.npmjs.com/package/random-access-storage#random-access-storage)
-. This library simply wraps the api to be served over any stream.
-
-### Both sides have nearly same api
-
-### `ras = serve(stream, randomAccessFactory, [config])`
-### `ras = connect(stream, [config])`
-
-`stream` Can be really any stream, socket, another random-access-over-mux instance or a [protomux](https://github.com/holepunchto/protomux/#protomux). Since my use-case this api will encounter unframed streams more 
-than framed, I decided to auto-frame the stream with [framed-stream](https://github.com/holepunchto/framed-stream#framed-stream). Set `config.noFrame=true` if you pass in a framed stream.
-
-`randomAccessFactory=(mux, config) => {}` A function that returns a [random-access](https://www.npmjs.com/package/random-access-storage#random-access-storage) instance. Serve side only argument.
- 
-`config` 
-
-- `protocol=randomAccessChannel` Optional protocol name. 
-- `id`  Optional binary ID to identify this file / RPC channel
-- `noFrame=false` If non-protomux stream is passed, will auto frame the stream unless this is set to true.
-- `bits=32` When noFrame=false, this will be the size each frame will be in bits. See [framed-stream](https://github.com/holepunchto/framed-stream#framed-stream)
-- coming soon: `timeout=8000` When the other side doesn't respond, close the connection at this timeout.
-
-### `await ras.opened`
-
-The channel and random-access-storage is opened.
-
-### `await ras.closed`
-
-The channel and random-access-storage is closed. 
-
-> Currently, you need to recreate the serve/connect pair to reopen. 
-> This will probably change.
-
-### Methods
-- **new** `RandomAccessOverMux instance = await ras.open()` |  `ras.open((error) => {})`
-- `data = await ras.read(offset, size)` | `ras.read(offset, size, (error, data) => {})`
-- `await ras.write(offset, buff)` | `ras.write(offset, buff, (error) => {})`
-- `await ras.del(offset, size)` | `ras.del(offset, size, (error) => {})`
-- `await ras.truncate(offset)` | `ras.truncate(offset, (error) => {})`
-- `stat = await ras.stat()` | `ras.stat(offset, (error, stat) => {})`
-- `close = await ras.close()` | `ras.close((error) => {})`
-- `await ras.unlink()` | `ras.unlink((error) => {})`
-
-### Properties
-
-### `protomux = ras.mux`
-
-Get the underlying muxor handling the random-access rpc connection where you can pass it to other libraries that use mux.
-
-### `protomux-rpc = ras.rpc`
-
-You may [add your own rpc](https://github.com/holepunchto/protomux-rpc#protomux-rpc) methods and make your own requests as long as they don't conflict with
-already defined ones (e.g. write, read, stat, truncate, del, close).
-
-### `{} = ras.capability`
-
-Get all the capabilities of the ras, on either side.
-
-```text
-{
-    readable
-    writable
-    deletable
-    truncatable
-    statable
-}
-```
-
-### `bool = ras.isServer`
-
-Whether the ras is the server or not.
-
-### `string=ras.protocol` 
-The protocol that the protomux-rpc is using
-### `buffer=ras.id` 
-The id the protomux-rpc is using. If created by loader, this is also the hash of the file.
 
 # Loader API
 
@@ -217,8 +219,6 @@ await clientLoader.unload("wineTastingTips.txt");
 
 // No longer available on client side but the server and other clients can still access.
 ```
-
-
 
 ## Using this repo to test inversion of control (IoC) techniques.
 
