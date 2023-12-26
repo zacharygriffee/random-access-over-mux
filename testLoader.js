@@ -34,25 +34,6 @@ test("Basic Loader", async t => {
     await t.exception(() => ras.stat(0, size), "the client gets channel closed");
 });
 
-test("unloaded by client", async t => {
-    const [d1, d2] = duplexThrough();
-    const folder = RAM.reusable();
-
-    const serveLoader = serve(d1, (fileName) => folder(fileName));
-    const loader = connect(d2);
-    const ras = await loader.load("helloWorld.txt");
-
-    await ras.write(0, b4a.from("hello world"));
-    t.is(b4a.toString(await ras.read(0, 5)), "hello");
-
-    const serveRas = await serveLoader.load("helloWorld.txt");
-    t.is(b4a.toString(await serveRas.read(0, 5)), "hello");
-
-    t.comment("The client can unload their file locally, but won't unload the file for the server.");
-    await loader.unload("helloWorld.txt");
-    t.ok(await serveRas.read(0, 4), "client doesn't unload the file for the server, just unloads for itself.")
-    await t.exception(() => ras.stat(0, 4), "the client gets channel closed");
-});
 
 test("Inversion of control: use", async t => {
     const {serve, connect} = await inject({

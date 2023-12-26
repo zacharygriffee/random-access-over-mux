@@ -186,10 +186,7 @@ This will load the file on the server side, and will return the random-access-ov
 
 `await loader.unload(fileName) | loader.unload(fileName, (err) => {})`
 
-- Called by the serve loader, will unload the file for both server and client.
-- Called by the connect loader, will unload the file for client only. The loader.serve will still be able to operate on it, and other loader.connect can connect.
-
-
+Unload the file for this rpc connection.
 ## Loader Example
 
 ```ecmascript 6
@@ -210,14 +207,7 @@ await ras.write(0, b4a.from("Don't like wine? You're probably drinking it wrong.
 const serveRas = await serveLoader.load("wineTastingTips.txt");
 await serveRas.read(52, 6); // Aerate
 
-// if you unload on server side.
 await serveLoader.unload("wineTastingTips.txt");
-// No longer available on client and server side
-
-// if you unload on client side
-await clientLoader.unload("wineTastingTips.txt");
-
-// No longer available on client side but the server and other clients can still access.
 ```
 
 ## Using this repo to test inversion of control (IoC) techniques.
