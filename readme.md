@@ -165,16 +165,15 @@ stream.destroySoon();
 ### `loader = serve(stream, fileFactory, [config])`
 ### `loader = connect(stream, [config])`
 
-`fileFactory=(fileName, mux, config) => {}` is different from the randomAccessFactory argument from file api. This will receive a 'fileName' as the first argument for you
+#### In addition to config in the 'file api' section the following configuration is available with some differences.
+
+- `protocol=randomAccessChannelLoader` Optional protocol name FOR THE LOADER, not the file.
+- `id`  Optional binary ID to identify this LOADER, not the file.
+- `fileFactory=(fileName, mux, config) => {}` is different from the randomAccessFactory argument from file api. This will receive a 'fileName' as the first argument for you
 to create a file from.
-
-#### In addition to config in the 'file api' section the following configuration is available
-
-`config.fileHasher=(fileName) => b4a.from(fileName)` When a file is requested, this function will turn the fileName into a hash for the id of the channel. By default,
-the hasher just converts the fileName into it's buffer representation.
-
-`config.protocolHandler=(fileName) => 'randomAccessChannel'` When a file is requested, this function will turn the fileName into a protocol for the protomux channel
-handling the underlying rpc. By default, it uses 'randomAccessChannel' as the protocol name.
+- `protocolHandler=(fileName) => 'randomAccessChannel'`
+- `fileHasher=(fileName) => b4a.from(fileName)` When a file is requested, this function will turn the fileName into a hash for the id of the channel. By default,
+  the hasher just converts the fileName into its buffer representation.
 
 ### Methods
 
