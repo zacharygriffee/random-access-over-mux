@@ -175,9 +175,13 @@ to create a file from.
 - `fileHasher=(fileName) => b4a.from(fileName)` When a file is requested, this function will turn the fileName into a hash for the id of the channel. By default,
   the hasher just converts the fileName into its buffer representation.
 
-### `ras = load(stream, file, [config])`
+### `raom = load(stream, file, [config])`
 
 Carries out what `connect` would do, but defers rpc/channel resolution to the random-access-storage.open function.
+
+This will interface with some libraries better than `connect`
+
+This actually returns an object that delegates the `file api`.
 
 ### Methods
 
