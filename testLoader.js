@@ -7,6 +7,8 @@ import inject from "./loader.ioc.js";
 import cenc from "compact-encoding";
 import FramedStream from "framed-stream";
 import ProtomuxRPC from "protomux-rpc";
+import Protomux from "protomux";
+import Hypercore from "hypercore";
 
 test("Basic Loader", async t => {
     const [d1, d2] = duplexThrough();
@@ -54,4 +56,37 @@ test("Inversion of control: use", async t => {
     t.is(b4a.toString(await ras.read(0, 5)), "hello");
 
     await serveLoader.unload();
+});
+
+test("Create a hypercore from a random-access-over-mux/loader with ram", async (t) => {
+    const [d1, d2] = duplexThrough();
+    const folder = RAM.reusable();
+
+    const serveMux = new Protomux(d1);
+    const clientMux = new Protomux(d2);
+
+    serve(serveMux, file => folder(file), {
+        protocolHandler: (fileName) => {
+            return "drink/tips/hypercore"
+        }
+    });
+
+    const loader = connect(clientMux, {
+        protocolHandler: (fileName) => {
+            return "drink/tips/hypercore"
+        }
+    });
+
+    const string = "Add an orange and lime to the rim. An orange is meant to make the margarita sweeter, while the lime more sour. It gives the patron ability to tweak the flavor to their liking.";
+    let files = {};
+
+    for await (const fileName of ["oplog", "data", "bitfield", "header", "tree", "signatures", "key", "secret_key"]) {
+        files[fileName] = await loader.load(fileName);
+    }
+
+    const core = new Hypercore((name) => files[name]);
+    await core.append(string);
+    const result = b4a.toString(await core.get(0));
+    t.is(result, string);
+    await core.purge();
 });
