@@ -213,21 +213,32 @@ await serveRas.read(52, 6); // Aerate
 await serveLoader.unload("wineTastingTips.txt");
 ```
 
-## Loader Example with 'load'
+[//]: # (## Loader Example with 'load')
 
-```ecmascript 6
-const folder = RAM.reusable();
-const serveLoader = serve(serverSocket, (fileName) => folder(fileName));
+[//]: # ()
+[//]: # (```ecmascript 6)
 
-// one way to do it
-const makeFile = (fileName) => load(clientSocket, fileName);
-// another way to do it
-const makeFile = load.bind(null, clientSocket);
+[//]: # (const folder = RAM.reusable&#40;&#41;;)
 
-const bittersFile = makeFile("bitters.txt");
-await bittersFile.write(0, b4a.from("aromatic bitters are good to add to any drink, they add an additional component to the drinking experience. Liqour stores typically carry all different kinds."));
-await bittersFile.read(9, 7); // bitters;
-```
+[//]: # (const serveLoader = serve&#40;serverSocket, &#40;fileName&#41; => folder&#40;fileName&#41;&#41;;)
+
+[//]: # ()
+[//]: # (// one way to do it)
+
+[//]: # (const makeFile = &#40;fileName&#41; => load&#40;clientSocket, fileName&#41;;)
+
+[//]: # (// another way to do it)
+
+[//]: # (const makeFile = load.bind&#40;null, clientSocket&#41;;)
+
+[//]: # ()
+[//]: # (const bittersFile = makeFile&#40;"bitters.txt"&#41;;)
+
+[//]: # (await bittersFile.write&#40;0, b4a.from&#40;"aromatic bitters are good to add to any drink, they add an additional component to the drinking experience. Liqour stores typically carry all different kinds."&#41;&#41;;)
+
+[//]: # (await bittersFile.read&#40;9, 7&#41;; // bitters;)
+
+[//]: # (```)
 
 ## Using this repo to test inversion of control (IoC) techniques.
 
