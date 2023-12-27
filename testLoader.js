@@ -1,5 +1,5 @@
-import {test} from "brittle";
-import {serve, connect} from "./loader.js";
+import {test, solo} from "brittle";
+import {serve, connect, load} from "./loader.js";
 import duplexThrough from "duplex-through";
 import RAM from "random-access-memory";
 import b4a from "b4a";
@@ -89,4 +89,29 @@ test("Create a hypercore from a random-access-over-mux/loader with ram", async (
     const result = b4a.toString(await core.get(0));
     t.is(result, string);
     await core.purge();
+});
+
+test("Load 1", async t => {
+    const [d1, d2] = duplexThrough();
+    const folder = RAM.reusable();
+
+    const serveLoader = serve(d1, (fileName) => folder(fileName));
+    const helloWorldFile = await serveLoader.load("helloWorld.txt");
+    await helloWorldFile.write(0, b4a.from("hello"));
+
+    const loader = load(d2, "helloWorld.txt");
+    t.is(b4a.toString(await loader.read(0, 5)), "hello", "defer the loading into the open function of the random-access-storage instance.");
+});
+
+test("Load 2", async t => {
+    const [d1, d2] = duplexThrough();
+    const folder = RAM.reusable();
+
+    const serveLoader = serve(d1, (fileName) => folder(fileName));
+    const helloWorldFile = await serveLoader.load("helloWorld.txt");
+    await helloWorldFile.write(0, b4a.from("hello"));
+
+    const loader = load.bind(null, d2);
+
+    t.is(b4a.toString(await loader("helloWorld.txt").read(0, 5)), "hello", "defer the loading into the open function of the random-access-storage instance.");
 });

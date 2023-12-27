@@ -1,10 +1,11 @@
 import {
     connect,
     serve,
-    injectDependencies
+    injectDependencies,
+    load
 } from "./lib/randomAccessOverMuxLoader.js";
 
 await injectDependencies();
 
-export {serve, connect};
-export default {serve, connect};
+export {serve, connect, load};
+export default {serve, connect, load};
