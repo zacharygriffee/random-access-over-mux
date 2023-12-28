@@ -175,9 +175,12 @@ to create a file from.
 - `fileHasher=(fileName) => b4a.from(fileName)` When a file is requested, this function will turn the fileName into a hash for the id of the channel. By default,
   the hasher just converts the fileName into its buffer representation.
 
-### WORK IN PROGRESS `(file) => {} = load(stream, [config])` 
+### `(file) => {} = load(stream, [config])` 
 
 load will return a function where you can connect to files from where the connection logic is deferred to the random-access-storage.open function.
+Loading a file already loaded will return the already loaded file.
+
+See example below of load usage
 
 ### Methods
 
@@ -185,11 +188,16 @@ load will return a function where you can connect to files from where the connec
 
 This will load the file on the server side, and will return the random-access-over-mux instance where the file API above takes over.
 
+If the file is already loaded, then it will return the loaded file.
+
 `returns` a random-access-over-mux instance see file api
 
-`await loader.unload(fileName) | loader.unload(fileName, (err) => {})`
+`await loader.unload([fileName]) | loader.unload([fileName], (err) => {})`
 
+If unloading from the server, you can omit the filename and it will unload all files.
+Working on the 'unload all' for client later.
 Unload the file for this rpc connection.
+
 ## Loader Example with 'connect'
 
 ```ecmascript 6
@@ -213,32 +221,21 @@ await serveRas.read(52, 6); // Aerate
 await serveLoader.unload("wineTastingTips.txt");
 ```
 
-[//]: # (## Loader Example with 'load')
+## Loader Example with 'load'
 
-[//]: # ()
-[//]: # (```ecmascript 6)
 
-[//]: # (const folder = RAM.reusable&#40;&#41;;)
+```ecmascript 6
 
-[//]: # (const serveLoader = serve&#40;serverSocket, &#40;fileName&#41; => folder&#40;fileName&#41;&#41;;)
+const folder = RAM.reusable();
 
-[//]: # ()
-[//]: # (// one way to do it)
+const serveLoader = serve(serverSocket, (fileName) => folder(fileName));
+const clientLoader = load(clientSocket);
 
-[//]: # (const makeFile = &#40;fileName&#41; => load&#40;clientSocket, fileName&#41;;)
+const bittersFile = clientLoader("bitters.txt");
+await bittersFile.write(0, b4a.from("aromatic bitters are good to add to any drink, they add an additional component to the drinking experience. Liqour stores typically carry all different kinds."));
+await clientLoader("bitters.txt").read(9, 7); // bitters;
 
-[//]: # (// another way to do it)
-
-[//]: # (const makeFile = load.bind&#40;null, clientSocket&#41;;)
-
-[//]: # ()
-[//]: # (const bittersFile = makeFile&#40;"bitters.txt"&#41;;)
-
-[//]: # (await bittersFile.write&#40;0, b4a.from&#40;"aromatic bitters are good to add to any drink, they add an additional component to the drinking experience. Liqour stores typically carry all different kinds."&#41;&#41;;)
-
-[//]: # (await bittersFile.read&#40;9, 7&#41;; // bitters;)
-
-[//]: # (```)
+```
 
 ## Using this repo to test inversion of control (IoC) techniques.
 
