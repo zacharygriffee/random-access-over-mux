@@ -249,57 +249,57 @@ test("1000 files", async t => {
     }
     console.timeEnd("second");
 });
-
-solo("Test protomux channel speeds", async a => {
-    const [d1, d2] = duplexThrough();
-    const mux1 = new Protomux(d1);
-    const mux2 = new Protomux(d2);
-
-    let muxId = 0;
-    const openCount = {
-        0: 0,
-        1: 0,
-        2: 0
-    };
-
-    let makeFinished, finished;
-    finished =  new Promise(resolve => makeFinished = resolve);
-
-    console.time("total");
-    console.time("first");
-    create1000Channels(mux1);
-    console.timeEnd("first");
-    console.time("second");
-    create1000Channels(mux2);
-    console.timeEnd("second");
-    console.timeEnd("total");
-
-    await finished;
-    console.log("Completed", openCount);
-
-    function create1000Channels(mux, id = muxId++) {
-        const channels = [];
-        for (let i = 0; i < 1000; i++) {
-            const protocol = "thousandChannelTest" + i
-            channels[i] = mux.createChannel({
-                protocol,
-                handshake: cenc.string,
-                onopen(hs) {
-                    openCount[id]++;
-                    if (muxId >= 2) makeFinished();
-                    console.log("fromMuxId:", muxId, "channel# ", i, " from ", id, " got ", hs);
-                }
-            });
-
-            mux.pair(protocol, () => {
-                if (!channels[i].opened) {
-                    channels[i].open("fromMuxId:", muxId, " from channel: " + id + " number " + i)
-                }
-            });
-
-            channels[i].open("mux#" + muxId);
-        }
-    }
-
-    await new Promise(resolve => setTimeout(resolve, 10000000));
-});
+//
+// solo("Test protomux channel speeds", async a => {
+//     const [d1, d2] = duplexThrough();
+//     const mux1 = new Protomux(d1);
+//     const mux2 = new Protomux(d2);
+//
+//     let muxId = 0;
+//     const openCount = {
+//         0: 0,
+//         1: 0,
+//         2: 0
+//     };
+//
+//     let makeFinished, finished;
+//     finished =  new Promise(resolve => makeFinished = resolve);
+//
+//     console.time("total");
+//     console.time("first");
+//     create1000Channels(mux1);
+//     console.timeEnd("first");
+//     console.time("second");
+//     create1000Channels(mux2);
+//     console.timeEnd("second");
+//     console.timeEnd("total");
+//
+//     await finished;
+//     console.log("Completed", openCount);
+//
+//     function create1000Channels(mux, id = muxId++) {
+//         const channels = [];
+//         for (let i = 0; i < 1000; i++) {
+//             const protocol = "thousandChannelTest" + i
+//             channels[i] = mux.createChannel({
+//                 protocol,
+//                 handshake: cenc.string,
+//                 onopen(hs) {
+//                     openCount[id]++;
+//                     if (muxId >= 2) makeFinished();
+//                     console.log("fromMuxId:", muxId, "channel# ", i, " from ", id, " got ", hs);
+//                 }
+//             });
+//
+//             mux.pair(protocol, () => {
+//                 if (!channels[i].opened) {
+//                     channels[i].open("fromMuxId:", muxId, " from channel: " + id + " number " + i)
+//                 }
+//             });
+//
+//             channels[i].open("mux#" + muxId);
+//         }
+//     }
+//
+//     await new Promise(resolve => setTimeout(resolve, 10000000));
+// });
