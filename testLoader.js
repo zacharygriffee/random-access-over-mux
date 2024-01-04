@@ -1,4 +1,4 @@
-import {solo, test, skip} from "brittle";
+import {test, solo} from "brittle";
 import {connect, load, serve} from "./loader.js";
 import duplexThrough from "duplex-through";
 import RAM from "random-access-memory";
@@ -184,9 +184,7 @@ test("Create a hypercore from a random-access-over-mux/loader with ram (load api
     const clientMux = new Protomux(d2);
 
     serve(serveMux, file => {
-        const buff =  folder(file);
-        // console.log("server", file, buff);
-        return buff;
+        return folder(file);
     }, {
         protocolHandler(fileName) {
             return "drink/tips/hypercore"
@@ -208,4 +206,100 @@ test("Create a hypercore from a random-access-over-mux/loader with ram (load api
     t.teardown(
         () => core.close()
     );
+});
+
+test("1000 files", async t => {
+    const [d1, d2] = duplexThrough();
+    const folder = RAM.reusable();
+
+    serve(d1, file => {
+        return folder(file);
+    });
+
+    const fileMaker = load(d2);
+
+    console.time("first");
+    for (let i = 0; i < 1000; i++) {
+        const file = fileMaker("hello" + i + ".txt");
+        await file.write(
+            0, b4a.from("hello" + i)
+        );
+        const {size} = await file.stat();
+        const buf = await file.read(
+            0, size
+        );
+        console.log(
+            b4a.toString(buf)
+        );
+    }
+    console.timeEnd("first");
+    console.time("second");
+    for (let i = 0; i < 1000; i++) {
+        const file = fileMaker("hello" + i + ".txt");
+        await file.write(
+            0, b4a.from("hello" + i)
+        );
+        const {size} = await file.stat();
+        const buf = await file.read(
+            0, size
+        );
+        console.log(
+            b4a.toString(buf)
+        );
+    }
+    console.timeEnd("second");
+});
+
+solo("Test protomux channel speeds", async a => {
+    const [d1, d2] = duplexThrough();
+    const mux1 = new Protomux(d1);
+    const mux2 = new Protomux(d2);
+
+    let muxId = 0;
+    const openCount = {
+        0: 0,
+        1: 0,
+        2: 0
+    };
+
+    let makeFinished, finished;
+    finished =  new Promise(resolve => makeFinished = resolve);
+
+    console.time("total");
+    console.time("first");
+    create1000Channels(mux1);
+    console.timeEnd("first");
+    console.time("second");
+    create1000Channels(mux2);
+    console.timeEnd("second");
+    console.timeEnd("total");
+
+    await finished;
+    console.log("Completed", openCount);
+
+    function create1000Channels(mux, id = muxId++) {
+        const channels = [];
+        for (let i = 0; i < 1000; i++) {
+            const protocol = "thousandChannelTest" + i
+            channels[i] = mux.createChannel({
+                protocol,
+                handshake: cenc.string,
+                onopen(hs) {
+                    openCount[id]++;
+                    if (muxId >= 2) makeFinished();
+                    console.log("fromMuxId:", muxId, "channel# ", i, " from ", id, " got ", hs);
+                }
+            });
+
+            mux.pair(protocol, () => {
+                if (!channels[i].opened) {
+                    channels[i].open("fromMuxId:", muxId, " from channel: " + id + " number " + i)
+                }
+            });
+
+            channels[i].open("mux#" + muxId);
+        }
+    }
+
+    await new Promise(resolve => setTimeout(resolve, 10000000));
 });

@@ -225,7 +225,6 @@ await serveLoader.unload("wineTastingTips.txt");
 
 
 ```ecmascript 6
-
 const folder = RAM.reusable();
 
 const serveLoader = serve(serverSocket, (fileName) => folder(fileName));
