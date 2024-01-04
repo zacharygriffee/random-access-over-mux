@@ -13,6 +13,7 @@ Roadmap and Current state:
 - No firewall or middlewares yet.
 - Be able to set readonly or writeonly or even stat-only
 - Suspend not yet supported
+- The loader is pretty slow right now. I'm trying to nail down why.
 
 > Although planned, there is no security protocols currently. Only use this between secure mediums and only over secure transports.
 
