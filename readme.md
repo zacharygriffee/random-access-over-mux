@@ -1,6 +1,13 @@
 # random-access-over-mux
 
 ---
+
+### Support the cause towards decentralization
+
+bitcoin: bc1q9fpu6muvmg5fj76pyzg3ffjrmksnvfj3c0xva6
+
+
+---
 ---
 
 ### `!! Alpha  Stage !!`

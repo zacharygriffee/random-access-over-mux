@@ -5,7 +5,8 @@
   "main": "index.js",
   "browser": "index.js",
   "description": "random-access over protomux channel",
-  "version": "0.0.1005",
+  "fundme": "bc1q9fpu6muvmg5fj76pyzg3ffjrmksnvfj3c0xva6",
+  "version": "0.0.1006",
   "homepage": "https://github.com/zacharygriffee/random-access-over-mux#random-access-over-mux",
   "scripts": {
     "test": "node ./test.js"
